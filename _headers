@@ -1,0 +1,35 @@
+# Cloudflare Pages — HTTP headers
+# Docs: https://developers.cloudflare.com/pages/configuration/headers/
+
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https://wa.me https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://stats.g.doubleclick.net https://www.googletagmanager.com https://graph.facebook.com https://*.facebook.com; frame-src 'self' https://www.facebook.com https://td.doubleclick.net; form-action 'self'; object-src 'none'; base-uri 'self'; upgrade-insecure-requests
+  X-XSS-Protection: 1; mode=block
+
+# Long-cache fingerprint-safe static assets
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# HTML kept short so content/contact updates go live quickly
+/*.html
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/
+  Cache-Control: public, max-age=3600, must-revalidate
+  Content-Language: en
+
+# i18n — declare language per locale directory
+/de/*
+  Content-Language: de
+
+/ru/*
+  Content-Language: ru
+
+# NOTE: If you later add Google Tag Manager / GA4 / Meta / TikTok pixels,
+# extend script-src and connect-src in the Content-Security-Policy above, e.g.:
+#   script-src 'self' https://www.googletagmanager.com;
+#   connect-src 'self' https://wa.me https://www.google-analytics.com https://region1.google-analytics.com;
