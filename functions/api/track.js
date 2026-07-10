@@ -89,7 +89,7 @@ export async function onRequestPost({ request, env }) {
   }
 
   /* ---------------- GA4 Measurement Protocol ---------------- */
-  const ga4Id = env.GA4_MEASUREMENT_ID || "G-42HRFT9YEX";
+  const ga4Id = env.GA4_MEASUREMENT_ID || "G-GEGPEWNRDN";
   const ga4Secret = env.GA4_API_SECRET || "nebOB8_WQ8iakB4nO3POSw";
   
   if (ga4Id && ga4Secret) {
