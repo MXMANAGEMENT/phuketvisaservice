@@ -89,7 +89,10 @@ export async function onRequestPost({ request, env }) {
   }
 
   /* ---------------- GA4 Measurement Protocol ---------------- */
-  if (env.GA4_MEASUREMENT_ID && env.GA4_API_SECRET) {
+  const ga4Id = env.GA4_MEASUREMENT_ID || "G-42HRFT9YEX";
+  const ga4Secret = env.GA4_API_SECRET || "nebOB8_WQ8iakB4nO3POSw";
+  
+  if (ga4Id && ga4Secret) {
     const clientId = gaClientId(body.ga_cookie);
     const mpBody = {
       client_id: clientId,
@@ -107,7 +110,7 @@ export async function onRequestPost({ request, env }) {
     try {
       const r = await fetch(
         "https://www.google-analytics.com/mp/collect?measurement_id=" +
-          encodeURIComponent(env.GA4_MEASUREMENT_ID) + "&api_secret=" + encodeURIComponent(env.GA4_API_SECRET),
+          encodeURIComponent(ga4Id) + "&api_secret=" + encodeURIComponent(ga4Secret),
         { method: "POST", body: JSON.stringify(mpBody) }
       );
       results.ga4 = r.status;
