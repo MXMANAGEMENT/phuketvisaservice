@@ -249,6 +249,42 @@
     });
   }
 
+  /* -------------------------------------------------------
+     MOBILE MENU
+     ------------------------------------------------------- */
+
+  function initMobileMenu() {
+    var btn = document.querySelector(".burger-btn");
+    var nav = document.querySelector(".mobile-nav");
+    if (!btn || !nav) return;
+
+    function toggleMenu() {
+      var isExpanded = btn.getAttribute("aria-expanded") === "true";
+      btn.setAttribute("aria-expanded", !isExpanded);
+      if (!isExpanded) {
+        nav.classList.add("is-open");
+        nav.removeAttribute("hidden");
+        document.body.style.overflow = "hidden"; // Prevent scrolling
+      } else {
+        nav.classList.remove("is-open");
+        setTimeout(function() { nav.setAttribute("hidden", "true"); }, 350);
+        document.body.style.overflow = "";
+      }
+    }
+
+    btn.addEventListener("click", toggleMenu);
+
+    // Close on link click
+    var links = nav.querySelectorAll("a");
+    links.forEach(function(link) {
+      link.addEventListener("click", function() {
+        if (btn.getAttribute("aria-expanded") === "true") {
+          toggleMenu();
+        }
+      });
+    });
+  }
+
   function init() {
     initWhatsAppLinks();
     initEventBindings();
@@ -256,6 +292,7 @@
     initScrollDepth();
     initStickyWhatsApp();
     initScrollTop();
+    initMobileMenu();
   }
 
   if (document.readyState === "loading") {
