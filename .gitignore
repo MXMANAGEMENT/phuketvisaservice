@@ -2,45 +2,21 @@
 # Build artifacts
 dist/
 build/
-*.js.map
-*.css.map
-
-# Logs
-*.log
-
-# Environment
-.env
-.env.local
-*.env.*
+*.html
 
 # Dependencies
 node_modules/
+
+# Logs and temp files
+*.log
+*.tmp
 
 # Editors
 .vscode/
 .idea/
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Coverage
-coverage/
-htmlcov/
-.coverage
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-*.so
-*.egg-info/
-.eggs/
-.mypy_cache/
-.pytest_cache/
-.tox/
-.coverage
-nosetests.xml
+# Environment
+.env
+.env.local
+.env.*
 ```
