@@ -186,12 +186,22 @@
     var fired = {};
     var height = 0;
     var innerH = 0;
+    var resizeTimeout = null;
 
     function updateMetrics() {
       height = document.documentElement.scrollHeight;
       innerH = window.innerHeight;
     }
-    window.addEventListener("resize", updateMetrics, { passive: true });
+
+    // Debounced resize handler to avoid excessive recalculations
+    function handleResize() {
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+      }
+      resizeTimeout = setTimeout(updateMetrics, 150);
+    }
+
+    window.addEventListener("resize", handleResize, { passive: true });
     updateMetrics();
 
     addScrollListener(function (y) {
