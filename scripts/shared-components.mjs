@@ -1,4 +1,5 @@
 import { site, locales } from "../config/site.mjs";
+import { serviceCatalog, serviceCopy } from "../config/services.mjs";
 
 const whatsappIcon = `<svg aria-hidden="true" class="btn-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.945C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 001.523 5.262l-.999 3.648 3.65-.948z"></path></svg>`;
 const socialIcons = Object.freeze({
@@ -143,6 +144,45 @@ function injectCaseCheck(html, relativePath) {
   return html;
 }
 
+function serviceSlug(relativePath) {
+  return relativePath.replace(/^(?:de\/|ru\/)/, "").replace(/\/index\.html$/, "");
+}
+
+function formatFee(value, locale, copy) {
+  if (value === "free") return locale === "en" ? "Free (0 THB)" : locale === "de" ? "Kostenlos (0 THB)" : "Бесплатно (0 THB)";
+  const format = number => new Intl.NumberFormat(locale === "de" ? "de-DE" : "en-US").format(number);
+  if (Array.isArray(value)) return `${format(value[0])}–${format(value[1])} THB`;
+  return `${format(value)} THB`;
+}
+
+function renderServicePricing(relativePath) {
+  const locale = pageLocale(relativePath);
+  const service = serviceCatalog[serviceSlug(relativePath)];
+  if (!service) return "";
+  const copy = serviceCopy[locale];
+  const rows = service.fees.map(([label, amount]) => `<tr><td>${escapeHtml(copy.feeLabels[label])}</td><td>${formatFee(amount, locale, copy)}</td></tr>`).join("");
+  return `<section class="service-pricing" data-shared-component="service-pricing" aria-labelledby="government-fees"><h2 id="government-fees">${escapeHtml(copy.feesTitle)}</h2><div class="table-responsive"><table class="table"><thead><tr><th scope="col">${escapeHtml(copy.feeType)}</th><th scope="col">${escapeHtml(copy.amount)}</th></tr></thead><tbody>${rows}<tr class="agency-fee"><td><strong>${escapeHtml(copy.agencyFee)}</strong></td><td><strong>${escapeHtml(copy.onRequest)}</strong></td></tr></tbody></table></div><p class="fee-note">${escapeHtml(copy.feeNote)}</p></section>`;
+}
+
+function renderServiceScope(relativePath) {
+  const locale = pageLocale(relativePath);
+  const service = serviceCatalog[serviceSlug(relativePath)];
+  if (!service) return "";
+  const copy = serviceCopy[locale];
+  const items = service.scope.map(key => `<li>${escapeHtml(copy.scopeLabels[key])}</li>`).join("");
+  return `<section class="service-scope" data-shared-component="service-scope"><h2>${escapeHtml(copy.scopeTitle)}</h2><ul>${items}</ul></section>`;
+}
+
+function injectServiceDetails(html, relativePath) {
+  if (!serviceCatalog[serviceSlug(relativePath)]) return html;
+  const pricingPattern = /<h2\s+id=["']government-fees["'][^>]*>[\s\S]*?<\/table>\s*<\/div>/i;
+  let output = pricingPattern.test(html) ? html.replace(pricingPattern, renderServicePricing(relativePath)) : html;
+  const helpHeadings = pageLocale(relativePath) === "en" ? "How we help(?: you choose)?" : pageLocale(relativePath) === "de" ? "So helfen wir(?: bei der Auswahl)?" : "Как мы помогаем(?: выбрать)?";
+  const scopePattern = new RegExp(`<h2>${helpHeadings}<\\/h2>\\s*<p>[\\s\\S]*?<\\/p>`, "i");
+  if (scopePattern.test(output)) output = output.replace(scopePattern, renderServiceScope(relativePath));
+  return output;
+}
+
 export function applySharedComponents(html, relativePath) {
   let output = stripDuplicatedGlobalSchemas(html);
   const headerPattern = /<header\b[^>]*class=["'][^"']*\bsite-header\b[^"']*["'][^>]*>[\s\S]*?<\/header>/i;
@@ -150,6 +190,7 @@ export function applySharedComponents(html, relativePath) {
   if (headerPattern.test(output)) output = output.replace(headerPattern, renderHeader(output, relativePath));
   if (footerPattern.test(output)) output = output.replace(footerPattern, renderFooter(relativePath));
   output = injectCaseCheck(output, relativePath);
+  output = injectServiceDetails(output, relativePath);
   const publicSiteConfig = JSON.stringify({ whatsappNumber: site.whatsappNumber, phoneE164: site.phoneE164, email: site.email });
   output = output.replace(/window\.VS_TRACK\s*=\s*\{[^}]*\}/g, `window.VS_SITE=${publicSiteConfig};window.VS_TRACK={GA4_ID:'${site.ga4MeasurementId}',ADS_CONVERSION:'${site.adsConversionId}',META_PIXEL_ID:'${site.metaPixelId}',CAPI_ENDPOINT:'${site.trackingEndpoint}'}`);
   output = output.replace(/<link\b[^>]*rel=["']preconnect["'][^>]*href=["']https:\/\/(?:wa\.me|www\.google-analytics\.com|www\.googletagmanager\.com|connect\.facebook\.net)[^"']*["'][^>]*>\s*/gi, "");
