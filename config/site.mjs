@@ -10,6 +10,16 @@ export const site = Object.freeze({
   metaPixelId: "",
   trackingEndpoint: "/api/track",
   logo: "/assets/img/logo.png",
+  image: "/assets/img/og-image.jpg",
+  address: Object.freeze({
+    addressLocality: "Wichit",
+    addressRegion: "Phuket",
+    addressCountry: "TH"
+  }),
+  openingHours: Object.freeze([
+    Object.freeze({ days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], opens: "09:00", closes: "18:00" }),
+    Object.freeze({ days: ["Saturday"], opens: "09:00", closes: "14:00" })
+  ]),
   social: Object.freeze({
     facebook: "https://www.facebook.com/visaservicephuket365/",
     instagram: "https://www.instagram.com/visaservicephuket365/",

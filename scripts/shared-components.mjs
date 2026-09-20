@@ -50,12 +50,81 @@ export function renderFooter(relativePath) {
 </div><div class="footer-bottom"><span>© 2026 ${site.brand}</span><span>${copy.independent}</span></div></div></footer>`;
 }
 
+const globalSchemaTypes = new Set(["Organization", "LocalBusiness", "WebSite"]);
+
+function normalizeEntityReferences(value) {
+  if (Array.isArray(value)) return value.map(normalizeEntityReferences);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, child]) => [key, normalizeEntityReferences(child)]));
+  }
+  return typeof value === "string" ? value.replace(`${site.origin}/#organization`, `${site.origin}/#business`) : value;
+}
+
+function stripDuplicatedGlobalSchemas(html) {
+  return html.replace(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi, (block, json) => {
+    let data;
+    try { data = normalizeEntityReferences(JSON.parse(json)); } catch { return block; }
+    if (globalSchemaTypes.has(data?.["@type"])) return "";
+    if (Array.isArray(data?.["@graph"])) {
+      data["@graph"] = data["@graph"].filter(node => !globalSchemaTypes.has(node?.["@type"]));
+      if (!data["@graph"].length) return "";
+      return `<script type="application/ld+json">${JSON.stringify(data)}</script>`;
+    }
+    return `<script type="application/ld+json">${JSON.stringify(data)}</script>`;
+  });
+}
+
+function renderEntityGraph(relativePath) {
+  const business = {
+    "@type": "LocalBusiness",
+    "@id": `${site.origin}/#business`,
+    name: site.brand,
+    url: `${site.origin}/`,
+    logo: { "@type": "ImageObject", url: `${site.origin}${site.logo}` },
+    image: `${site.origin}${site.image}`,
+    telephone: site.phoneE164,
+    email: site.email,
+    address: { "@type": "PostalAddress", ...site.address },
+    areaServed: { "@type": "AdministrativeArea", name: "Phuket, Thailand" },
+    openingHoursSpecification: site.openingHours.map(hours => ({
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: hours.days,
+      opens: hours.opens,
+      closes: hours.closes
+    })),
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      telephone: site.phoneE164,
+      url: `https://wa.me/${site.whatsappNumber}`,
+      availableLanguage: ["en", "de", "ru", "th"]
+    },
+    sameAs: [site.social.facebook, site.social.instagram, site.social.linkedin],
+    priceRange: "$$"
+  };
+  const website = {
+    "@type": "WebSite",
+    "@id": `${site.origin}/#website`,
+    url: `${site.origin}/`,
+    name: site.brand,
+    inLanguage: ["en", "de", "ru"],
+    publisher: { "@id": `${site.origin}/#business` }
+  };
+  return `<script type="application/ld+json" data-shared-component="entity-graph">${JSON.stringify({ "@context": "https://schema.org", "@graph": [business, website] })}</script>`;
+}
+
 export function applySharedComponents(html, relativePath) {
-  let output = html;
+  let output = stripDuplicatedGlobalSchemas(html);
   const headerPattern = /<header\b[^>]*class=["'][^"']*\bsite-header\b[^"']*["'][^>]*>[\s\S]*?<\/header>/i;
   const footerPattern = /<footer\b[^>]*class=["'][^"']*\bsite-footer\b[^"']*["'][^>]*>[\s\S]*?<\/footer>/i;
   if (headerPattern.test(output)) output = output.replace(headerPattern, renderHeader(output, relativePath));
   if (footerPattern.test(output)) output = output.replace(footerPattern, renderFooter(relativePath));
-  output = output.replace(/window\.VS_TRACK\s*=\s*\{[^}]*\}/g, `window.VS_TRACK={GA4_ID:'${site.ga4MeasurementId}',ADS_CONVERSION:'${site.adsConversionId}',META_PIXEL_ID:'${site.metaPixelId}',CAPI_ENDPOINT:'${site.trackingEndpoint}'}`);
+  const publicSiteConfig = JSON.stringify({ whatsappNumber: site.whatsappNumber, phoneE164: site.phoneE164, email: site.email });
+  output = output.replace(/window\.VS_TRACK\s*=\s*\{[^}]*\}/g, `window.VS_SITE=${publicSiteConfig};window.VS_TRACK={GA4_ID:'${site.ga4MeasurementId}',ADS_CONVERSION:'${site.adsConversionId}',META_PIXEL_ID:'${site.metaPixelId}',CAPI_ENDPOINT:'${site.trackingEndpoint}'}`);
+  output = output.replace(/<link\b[^>]*rel=["']preconnect["'][^>]*href=["']https:\/\/(?:wa\.me|www\.google-analytics\.com|www\.googletagmanager\.com|connect\.facebook\.net)[^"']*["'][^>]*>\s*/gi, "");
+  output = output.replace(/<link\b[^>]*href=["']https:\/\/(?:wa\.me|www\.google-analytics\.com|www\.googletagmanager\.com|connect\.facebook\.net)[^"']*["'][^>]*rel=["']preconnect["'][^>]*>\s*/gi, "");
+  if (!/name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(output)) {
+    output = output.replace(/<\/head>/i, `${renderEntityGraph(relativePath)}\n</head>`);
+  }
   return output;
 }

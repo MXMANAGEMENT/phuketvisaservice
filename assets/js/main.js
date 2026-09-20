@@ -13,9 +13,9 @@
      CONFIG
      ------------------------------------------------------- */
 
-  // WhatsApp number — international format, digits only, no "+" or spaces.
-  // Live number: +66 94 829 3074  (WhatsApp reachable 24/7).
-  var WHATSAPP_NUMBER = "66948293074";
+  // Generated from config/site.mjs during the production build.
+  var SITE_CFG = window.VS_SITE || {};
+  var WHATSAPP_NUMBER = SITE_CFG.whatsappNumber || "";
 
   // Pre-filled WhatsApp messages per language.
   var WA_MESSAGES = {
@@ -73,6 +73,7 @@
      ------------------------------------------------------- */
 
   function buildWhatsAppHref(message) {
+    if (!WHATSAPP_NUMBER) return "#contact";
     var text = encodeURIComponent(message || WA_MESSAGES[DOC_LANG] || WA_MESSAGES.en);
     return "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + text;
   }

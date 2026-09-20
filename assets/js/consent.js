@@ -11,9 +11,9 @@
   "use strict";
 
   var CFG = window.VS_TRACK || {};
-  var GA4_ID = CFG.GA4_ID || "";                 // "G-XXXXXXX" — TODO
-  var ADS_CONVERSION = CFG.ADS_CONVERSION || ""; // "AW-XXX/label" — TODO (optional)
-  var META_PIXEL_ID = CFG.META_PIXEL_ID || "";   // "1234567890" — TODO
+  var GA4_ID = CFG.GA4_ID || "";
+  var ADS_CONVERSION = CFG.ADS_CONVERSION || "";
+  var META_PIXEL_ID = CFG.META_PIXEL_ID || "";
   var CAPI_ENDPOINT = CFG.CAPI_ENDPOINT || "/api/track";
 
   var STORE_KEY = "vs_consent";
@@ -84,9 +84,19 @@
 
   /* ---------------- tag loaders (only after consent) ---------------- */
   var gaLoaded = false, pxLoaded = false;
+  function preconnect(href) {
+    if (document.querySelector('link[rel="preconnect"][href="' + href + '"]')) return;
+    var link = document.createElement("link");
+    link.rel = "preconnect";
+    link.href = href;
+    link.crossOrigin = "anonymous";
+    document.head.appendChild(link);
+  }
   function loadGA() {
     if (gaLoaded || !GA4_ID || GA4_ID.indexOf("TODO") === 0) return;
     gaLoaded = true;
+    preconnect("https://www.googletagmanager.com");
+    preconnect("https://www.google-analytics.com");
     var s = document.createElement("script"); s.async = true;
     s.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(GA4_ID);
     document.head.appendChild(s);
@@ -96,6 +106,7 @@
   function loadPixel() {
     if (pxLoaded || !META_PIXEL_ID || META_PIXEL_ID.indexOf("TODO") === 0) return;
     pxLoaded = true;
+    preconnect("https://connect.facebook.net");
     /* eslint-disable */
     !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
       n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
@@ -152,9 +163,9 @@
       } catch (e) {}
     }
 
-    // Server-side (CAPI + GA4 Measurement Protocol) — only with marketing consent.
+    // Server-side forwarding respects the independent analytics/marketing choices.
     // The Cloudflare Pages Function de-dups via event_id and adds IP/UA hashing.
-    if (c.marketing) {
+    if (c.analytics || c.marketing) {
       try {
         var body = {
           event_name: name, event_id: eid,

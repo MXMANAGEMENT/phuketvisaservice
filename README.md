@@ -19,6 +19,6 @@ npm run verify
 
 Cloudflare Pages discovers the `functions/` directory at the repository root. Do not move it into `dist/`.
 
-Shared business data and localized navigation live in `config/site.mjs`. During the build, `scripts/shared-components.mjs` renders the standard header, footer, and tracking configuration into all regular pages. The three standalone comparison guides retain their dedicated article layout.
+Shared business data and localized navigation live in `config/site.mjs`. During the build, `scripts/shared-components.mjs` renders the standard header, footer, tracking configuration, and global `LocalBusiness`/`WebSite` entity graph. Page-specific Service, FAQ, Article, Breadcrumb, and WebApplication schemas remain with their pages. The three standalone comparison guides retain their dedicated article layout.
 
 Every pull request and push to `main` runs the same quality gate in GitHub Actions. The build fails for broken internal assets, invalid JSON-LD, wrong locale metadata, foreign canonicals, tracking placeholders, leaked revoked secrets, inconsistent phone numbers, or sitemap drift.
