@@ -1,5 +1,6 @@
 import { site, locales } from "../config/site.mjs";
 import { serviceCatalog, serviceCopy } from "../config/services.mjs";
+import { locationProfiles, locationCopy } from "../config/locations.mjs";
 
 const whatsappIcon = `<svg aria-hidden="true" class="btn-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.945C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 001.523 5.262l-.999 3.648 3.65-.948z"></path></svg>`;
 const socialIcons = Object.freeze({
@@ -130,7 +131,7 @@ function renderCaseCheck(html, relativePath) {
   const items = copy.items.map(item => `<li>${escapeHtml(item)}</li>`).join("");
   return `<aside class="case-check" data-shared-component="case-check" aria-labelledby="case-check-title">
 <div class="case-check-copy"><span class="case-check-eyebrow">${escapeHtml(copy.eyebrow)}</span><h2 id="case-check-title">${escapeHtml(copy.title)}</h2><p>${escapeHtml(copy.text)}</p><ul>${items}</ul></div>
-<div class="case-check-action"><a class="btn btn-whatsapp" data-event="whatsapp_click" data-location="case_check" data-service="${escapeHtml(service)}" data-wa-message="${escapeHtml(message)}" data-whatsapp href="#">${whatsappIcon} ${escapeHtml(copy.button)}</a><small>${escapeHtml(copy.note)}</small></div>
+<div class="case-check-action"><a class="btn btn-whatsapp" data-event="whatsapp_click" data-intent-event="case_check" data-location="case_check" data-service="${escapeHtml(service)}" data-wa-message="${escapeHtml(message)}" data-whatsapp href="#">${whatsappIcon} ${escapeHtml(copy.button)}</a><small>${escapeHtml(copy.note)}</small></div>
 </aside>`;
 }
 
@@ -183,6 +184,63 @@ function injectServiceDetails(html, relativePath) {
   return output;
 }
 
+function locationProfile(relativePath) {
+  const slug = serviceSlug(relativePath);
+  return Object.values(locationProfiles).find(profile => profile.slug === slug);
+}
+
+function renderLocationMain(relativePath) {
+  const profile = locationProfile(relativePath);
+  if (!profile) return "";
+  const locale = pageLocale(relativePath);
+  const copy = locationCopy[locale];
+  const prefix = locale === "en" ? "" : `/${locale}`;
+  const cards = profile.focus.map(key => { const [title,text,href]=copy.focus[key]; return `<article class="local-need-card"><h3><a href="${href}">${escapeHtml(title)}</a></h3><p>${escapeHtml(text)}</p></article>`; }).join("");
+  const steps = copy.steps.map(step => `<li>${escapeHtml(step)}</li>`).join("");
+  const message = locale === "de" ? `Hallo, ich wohne in ${profile.name} und möchte meine Visa-Situation prüfen. Staatsangehörigkeit: ___, Visum/Stempel: ___, Ablaufdatum: ___.` : locale === "ru" ? `Здравствуйте, я живу в ${profile.name} и хочу проверить визовую ситуацию. Гражданство: ___, виза/штамп: ___, срок: ___.` : `Hello, I live in ${profile.name} and would like a visa case check. Nationality: ___, visa/stamp: ___, expiry date: ___.`;
+  return `<main id="main" data-location-page="${profile.slug}">
+<section class="hero local-hero"><div class="container"><span class="eyebrow">${escapeHtml(copy.eyebrow(profile.name))}</span><h1>${escapeHtml(copy.title(profile.name))}</h1><p class="hero-sub">${escapeHtml(copy.intro(profile.name, profile.nearby[locale]))}</p><div class="hero-ctas"><a class="btn btn-whatsapp" data-whatsapp data-event="whatsapp_click" data-intent-event="case_check" data-location="local_hero" data-wa-message="${escapeHtml(message)}" href="#">${whatsappIcon} ${escapeHtml(copy.cta)}</a><a class="btn btn-outline" href="${prefix}/#services">${escapeHtml(copy.services)}</a></div></div></section>
+<section class="location-transparency"><div class="container"><div class="location-notice"><h2>${escapeHtml(copy.noticeTitle(profile.name))}</h2><p>${escapeHtml(copy.notice(profile.name))}</p></div></div></section>
+<section><div class="container"><div class="section-head"><h2>${escapeHtml(copy.needs(profile.name))}</h2></div><div class="local-needs-grid">${cards}</div></div></section>
+<section class="local-process"><div class="container"><h2>${escapeHtml(copy.process)}</h2><ol class="steps">${steps}</ol></div></section>
+<section><div class="container"><div class="faq-list"><h2>${escapeHtml(copy.faq)}</h2><details class="faq-item"><summary>${escapeHtml(copy.q1(profile.name))}</summary><div class="faq-body">${escapeHtml(copy.a1(profile.name))}</div></details><details class="faq-item"><summary>${escapeHtml(copy.q2(profile.name))}</summary><div class="faq-body">${escapeHtml(copy.a2(profile.name))}</div></details><details class="faq-item"><summary>${escapeHtml(copy.q3)}</summary><div class="faq-body">${escapeHtml(copy.a3)}</div></details></div></div></section>
+<section class="final-cta"><div class="container"><h2>${escapeHtml(copy.cta)}</h2><a class="btn btn-whatsapp btn-lg" data-whatsapp data-event="whatsapp_click" data-intent-event="case_check" data-location="local_footer" data-wa-message="${escapeHtml(message)}" href="#">${whatsappIcon} WhatsApp</a></div></section>
+</main>`;
+}
+
+function injectLocationPage(html, relativePath) {
+  if (!locationProfile(relativePath)) return html;
+  return html.replace(/<main\b[^>]*>[\s\S]*?<\/main>/i, renderLocationMain(relativePath));
+}
+
+function normalizeTrustClaims(html, relativePath) {
+  const locale = pageLocale(relativePath);
+  const trust = locale === "de" ? "Fallbezogene Dokumentenprüfung · Keine Genehmigungsgarantie" : locale === "ru" ? "Проверка документов по ситуации · Без гарантии одобрения" : "Case-specific document review · No approval guarantee";
+  let output = html.replace(/<p\b[^>]*class=["'][^"']*\bsocial-proof-note\b[^"']*["'][^>]*>[\s\S]*?<\/p>/gi, `<p class="social-proof-note">${trust}</p>`);
+  const replacements = [
+    [/Visa Service Phuket 2026 \| Local Visa Experts ⭐️ 4\.9\/5 \(500\+ Reviews\)/g,"Visa Service Phuket | Local Visa Support [2026]"],
+    [/Visa Service Phuket 2026 \| Lokale Visa-Experten ⭐️ 4\.9\/5 \(500\+ Bewertungen\)/g,"Visa Service Phuket | Lokale Visa-Unterstützung [2026]"],
+    [/Visa Service Phuket 2026 \| Визовые эксперты ⭐️ 4\.9\/5 \(500\+ отзывов\)/g,"Visa Service Phuket | Визовая поддержка [2026]"],
+    [/✅ Fast local visa help in Phuket\. Extensions, retirement visas, 90-day reports, re-entry permits and more\. WhatsApp us, reply in minutes\. Trusted by 500\+ expats\./g,"Local visa and document support in Phuket for extensions, retirement stays, reporting and re-entry. Start with a case-specific WhatsApp check."],
+    [/✅ Schnelle Visa-Hilfe in Phuket\. Verlängerungen, Rentnervisum, 90-Tage-Report\. ⭐️ 4\.9\/5 \(500\+ Reviews\)\. WhatsApp\. Antwort in Minuten\./g,"Lokale Visa- und Dokumentenhilfe in Phuket für Verlängerungen, Retirement, Meldungen und Re-Entry. Starten Sie mit einer fallbezogenen WhatsApp-Prüfung."],
+    [/✅ Быстрая визовая помощь на Пхукете\. Продление виз, пенсионные визы, 90-дневные отчёты\. ⭐️ 4\.9\/5 \(500\+ Reviews\)\. Пишите в WhatsApp, ответ за минуты\./g,"Визовая и документальная поддержка на Пхукете: продления, пенсионное пребывание, отчётность и Re-Entry. Начните с проверки ситуации в WhatsApp."],
+    [/📍 Local team in Phuket, Thailand · ⭐️ 4\.9\/5 \(500\+ Reviews\)/g,"📍 Local support team in Phuket, Thailand"],
+    [/📍 Vor Ort in Phuket, Thailand · ⭐️ 4\.9\/5 \(500\+ Bewertungen\)/g,"📍 Lokale Unterstützung in Phuket, Thailand"],
+    [/📍 Мы на Пхукете, Таиланд · ⭐️ 4\.9\/5 \(500\+ отзывов\)/g,"📍 Поддержка на Пхукете, Таиланд"],
+    [/⭐️ 4\.9\/5 \(500\+ Reviews\)/g,"Case-specific review"],
+    [/⭐️ 4\.9\/5 \(500\+ Bewertungen\)/g,"Fallbezogene Prüfung"],
+    [/⭐️ 4\.9\/5 \(500\+ отзывов\)/g,"Проверка по ситуации"],
+    [/⭐️ Trusted by 500\+ Clients/g,"Case-specific local support"],
+    [/⭐️ Vertraut von 500\+ Klienten/g,"Fallbezogene lokale Unterstützung"],
+    [/⭐️ Доверяют 500\+ клиентов/g,"Локальная поддержка по ситуации"],
+    [/Based in Phuket, she has assisted 500\+ clients with visa extensions, retirement visas, and driving license conversions\./g,"Based in Phuket, she supports clients with visa documents and process preparation."],
+    [/Mit Sitz in Phuket hat sie bereits 500\+ Klienten bei Visum-Verlängerungen, Rentenvisen und Führerschein-Umwandlungen geholfen\./g,"In Phuket unterstützt sie Kunden bei Visa-Dokumenten und der Vorbereitung von Abläufen."],
+    [/Базируется на Пхукете, помогла уже 500\+ клиентам с продлением виз, пенсионными визами и конвертацией водительских прав\./g,"На Пхукете она помогает клиентам с визовыми документами и подготовкой процессов."]
+  ];
+  for (const [pattern,replacement] of replacements) output = output.replace(pattern,replacement);
+  return output;
+}
+
 export function applySharedComponents(html, relativePath) {
   let output = stripDuplicatedGlobalSchemas(html);
   const headerPattern = /<header\b[^>]*class=["'][^"']*\bsite-header\b[^"']*["'][^>]*>[\s\S]*?<\/header>/i;
@@ -191,6 +249,8 @@ export function applySharedComponents(html, relativePath) {
   if (footerPattern.test(output)) output = output.replace(footerPattern, renderFooter(relativePath));
   output = injectCaseCheck(output, relativePath);
   output = injectServiceDetails(output, relativePath);
+  output = injectLocationPage(output, relativePath);
+  output = normalizeTrustClaims(output, relativePath);
   const publicSiteConfig = JSON.stringify({ whatsappNumber: site.whatsappNumber, phoneE164: site.phoneE164, email: site.email });
   output = output.replace(/window\.VS_TRACK\s*=\s*\{[^}]*\}/g, `window.VS_SITE=${publicSiteConfig};window.VS_TRACK={GA4_ID:'${site.ga4MeasurementId}',ADS_CONVERSION:'${site.adsConversionId}',META_PIXEL_ID:'${site.metaPixelId}',CAPI_ENDPOINT:'${site.trackingEndpoint}'}`);
   output = output.replace(/<link\b[^>]*rel=["']preconnect["'][^>]*href=["']https:\/\/(?:wa\.me|www\.google-analytics\.com|www\.googletagmanager\.com|connect\.facebook\.net)[^"']*["'][^>]*>\s*/gi, "");

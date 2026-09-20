@@ -6,7 +6,7 @@
   "scripts": {
     "check": "node scripts/quality-gate.mjs",
     "build": "node scripts/build.mjs",
-    "verify": "npm run check && npm run build && node scripts/quality-gate.mjs dist"
+    "verify": "npm run check && npm run build && node scripts/quality-gate.mjs dist && node scripts/seo-gate.mjs dist && node scripts/performance-budget.mjs dist"
   },
   "engines": {
     "node": ">=20"

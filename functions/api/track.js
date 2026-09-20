@@ -2,7 +2,7 @@
    Server-side forwarding for consented first-party events.
    Secrets must be configured in Cloudflare Pages environment variables. */
 const META_STD={whatsapp_click:"Lead",phone_click:"Contact",email_click:"Contact"};
-const ALLOWED=new Set(["whatsapp_click","phone_click","email_click","language_switch","faq_open","scroll_25","scroll_50","scroll_75","scroll_90","scroll_top"]);
+const ALLOWED=new Set(["whatsapp_click","case_check","phone_click","email_click","language_switch","faq_open","service_view","case_check_view","service_scope_view","pricing_view","scroll_25","scroll_50","scroll_75","scroll_90","scroll_top"]);
 function json(data,status=200){return new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json","Cache-Control":"no-store"}})}
 function safeUrl(value){
   try{const u=new URL(String(value||""));return u.protocol==="https:"&&u.hostname==="phuketvisaservice.com"?u.href:"https://phuketvisaservice.com/"}catch{return "https://phuketvisaservice.com/"}

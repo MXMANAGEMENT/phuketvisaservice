@@ -31,6 +31,39 @@
   };
 
   var DOC_LANG = (document.documentElement.getAttribute("lang") || "en").slice(0, 2);
+  var ATTR_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gclid", "fbclid"];
+
+  function cleanValue(value) {
+    return String(value || "").replace(/[^a-zA-Z0-9._~ -]/g, "").slice(0, 100);
+  }
+
+  function sessionValue(key, create) {
+    try {
+      var value = sessionStorage.getItem(key);
+      if (!value && create) { value = create(); sessionStorage.setItem(key, value); }
+      return value || "";
+    } catch (e) { return create ? create() : ""; }
+  }
+
+  var LEAD_ID = sessionValue("vs_lead_id", function () {
+    return (window.crypto && crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : Math.random().toString(36).slice(2, 10)).toUpperCase();
+  });
+
+  function attribution() {
+    var current = new URLSearchParams(window.location.search);
+    var stored = {};
+    try { stored = JSON.parse(sessionStorage.getItem("vs_attribution") || "{}"); } catch (e) {}
+    ATTR_KEYS.forEach(function (key) {
+      var value = cleanValue(current.get(key));
+      if (value && !stored[key]) stored[key] = value;
+    });
+    try { sessionStorage.setItem("vs_attribution", JSON.stringify(stored)); } catch (e) {}
+    return stored;
+  }
+
+  var ATTRIBUTION = attribution();
+  var PAGE_PATH = window.location.pathname;
+  var SERVICE_SLUG = document.querySelector('[data-shared-component="service-pricing"]') ? PAGE_PATH.replace(/^\/(?:de\/|ru\/)?|\/$/g, "") : "";
 
   /* -------------------------------------------------------
      TRACKING — window.trackEvent(name, data)
@@ -45,8 +78,12 @@
         event: eventName,
         page_language: DOC_LANG,
         page_location: window.location.href,
+        page_path: PAGE_PATH,
+        service_slug: SERVICE_SLUG || null,
+        lead_id: LEAD_ID,
         timestamp: new Date().toISOString()
       },
+      ATTRIBUTION,
       eventData || {}
     );
 
@@ -74,7 +111,9 @@
 
   function buildWhatsAppHref(message) {
     if (!WHATSAPP_NUMBER) return "#contact";
-    var text = encodeURIComponent(message || WA_MESSAGES[DOC_LANG] || WA_MESSAGES.en);
+    var base = message || WA_MESSAGES[DOC_LANG] || WA_MESSAGES.en;
+    var referenceLabel = DOC_LANG === "de" ? "Referenz" : DOC_LANG === "ru" ? "Код" : "Reference";
+    var text = encodeURIComponent(base + "\n" + referenceLabel + ": " + LEAD_ID);
     return "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + text;
   }
 
@@ -93,6 +132,8 @@
           location: link.getAttribute("data-location") || "unknown",
           service: link.getAttribute("data-service") || null
         });
+        var intentEvent = link.getAttribute("data-intent-event");
+        if (intentEvent) window.trackEvent(intentEvent, { location: link.getAttribute("data-location") || "unknown", service: link.getAttribute("data-service") || null });
       });
     });
   }
@@ -150,6 +191,28 @@
           });
         }
       });
+    });
+  }
+
+  function initFunnelViews() {
+    window.trackEvent("service_view", { page_type: SERVICE_SLUG ? "service" : "content" });
+    if (!("IntersectionObserver" in window)) return;
+    var targets = [
+      ["[data-shared-component='case-check']", "case_check_view"],
+      ["[data-shared-component='service-scope']", "service_scope_view"],
+      ["[data-shared-component='service-pricing']", "pricing_view"]
+    ];
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var eventName = entry.target.getAttribute("data-view-event");
+        if (eventName) window.trackEvent(eventName, {});
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.45 });
+    targets.forEach(function (item) {
+      var element = document.querySelector(item[0]);
+      if (element) { element.setAttribute("data-view-event", item[1]); observer.observe(element); }
     });
   }
 
@@ -326,6 +389,7 @@
     initWhatsAppLinks();
     initEventBindings();
     initFaq();
+    initFunnelViews();
     initScrollDepth();
     initStickyWhatsApp();
     initScrollTop();
