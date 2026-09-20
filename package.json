@@ -1,0 +1,14 @@
+{
+  "name": "phuket-visa-service",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node scripts/quality-gate.mjs",
+    "build": "node scripts/build.mjs",
+    "verify": "npm run check && npm run build && node scripts/quality-gate.mjs dist"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

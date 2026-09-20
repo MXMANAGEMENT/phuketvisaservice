@@ -1,0 +1,107 @@
+import { access, readFile, readdir } from "node:fs/promises";
+import path from "node:path";
+import process from "node:process";
+
+const root = path.resolve(process.argv[2] || ".");
+const origin = "https://phuketvisaservice.com";
+const expectedPhone = "66948293074";
+const failures = [];
+const warnings = [];
+
+async function filesBelow(dir) {
+  const found = [];
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    if ([".git", ".github", "dist", "functions", "node_modules", "scripts"].includes(entry.name)) continue;
+    const file = path.join(dir, entry.name);
+    if (entry.isDirectory()) found.push(...await filesBelow(file));
+    else found.push(file);
+  }
+  return found;
+}
+
+function fail(file, message) {
+  failures.push(`${path.relative(root, file) || "."}: ${message}`);
+}
+
+function urls(html, attribute) {
+  const values = [];
+  const pattern = new RegExp(`\\b${attribute}\\s*=\\s*["']([^"']+)["']`, "gi");
+  for (const match of html.matchAll(pattern)) values.push(match[1]);
+  return values;
+}
+
+function localTarget(value) {
+  if (!value || /^(?:https?:|mailto:|tel:|data:|javascript:|#)/i.test(value)) return null;
+  const clean = value.split(/[?#]/, 1)[0];
+  if (!clean) return null;
+  return path.join(root, clean.startsWith("/") ? clean.slice(1) : clean);
+}
+
+async function existsAsWebPath(target) {
+  try { await access(target); return true; } catch {}
+  try { await access(path.join(target, "index.html")); return true; } catch {}
+  if (!path.extname(target)) {
+    try { await access(`${target}.html`); return true; } catch {}
+  }
+  return false;
+}
+
+const allFiles = await filesBelow(root);
+const htmlFiles = allFiles.filter(file => file.endsWith(".html") && !file.endsWith("assets/index.html"));
+
+for (const file of allFiles.filter(file => /\.(?:html|js|json|md|txt|xml)$/i.test(file))) {
+  const text = await readFile(file, "utf8");
+  const blocked = [
+    [/phuketvisahelper\.com/i, "legacy canonical/domain found"],
+    [/via\.placeholder\.com/i, "placeholder asset found"],
+    [/TODO_(?:META|GOOGLE|GA4)/i, "tracking TODO found"],
+    [/\+?66[- ]?(?:12|XX)[- ]/i, "placeholder phone found"],
+    [/y8cZG1NHSQSrgLyuaJOTpQ/, "revoked secret found"]
+  ];
+  for (const [pattern, message] of blocked) if (pattern.test(text)) fail(file, message);
+}
+
+for (const file of htmlFiles) {
+  const html = await readFile(file, "utf8");
+  const relative = path.relative(root, file).replaceAll(path.sep, "/");
+  const locale = relative.startsWith("de/") ? "de" : relative.startsWith("ru/") ? "ru" : "en";
+  const noindex = /name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(html);
+  const lang = html.match(/<html[^>]*\blang=["']([^"']+)["']/i)?.[1];
+  if (lang !== locale) fail(file, `lang must be ${locale}, got ${lang || "missing"}`);
+  if (!noindex && !/<title>[^<]+<\/title>/i.test(html)) fail(file, "missing title");
+  if (!noindex && !/<meta[^>]+name=["']description["'][^>]+content=["'][^"']+["']/i.test(html) && !/<meta[^>]+content=["'][^"']+["'][^>]+name=["']description["']/i.test(html)) fail(file, "missing meta description");
+  if (!noindex && !/<h1(?:\s|>)/i.test(html)) fail(file, "missing H1");
+  const canonicals = [...html.matchAll(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["'][^>]*>/gi), ...html.matchAll(/<link[^>]+href=["']([^"']+)["'][^>]+rel=["']canonical["'][^>]*>/gi)].map(m => m[1]);
+  if (!noindex && canonicals.length !== 1) fail(file, `expected one canonical, found ${canonicals.length}`);
+  else if (canonicals.length === 1 && !canonicals[0].startsWith(origin)) fail(file, `canonical outside primary domain: ${canonicals[0]}`);
+  for (const script of html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+    try { JSON.parse(script[1]); } catch (error) { fail(file, `invalid JSON-LD: ${error.message}`); }
+  }
+  for (const value of [...urls(html, "href"), ...urls(html, "src")]) {
+    const target = localTarget(value);
+    if (target && !await existsAsWebPath(target)) fail(file, `missing local target: ${value}`);
+  }
+  for (const phone of html.matchAll(/(?:wa\.me\/|tel:\+?)(\d{8,15})/g)) {
+    if (phone[1] !== expectedPhone) fail(file, `unexpected phone: ${phone[1]}`);
+  }
+}
+
+const sitemapPath = path.join(root, "sitemap.xml");
+try {
+  const sitemap = await readFile(sitemapPath, "utf8");
+  const sitemapUrls = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]));
+  for (const file of htmlFiles) {
+    const relative = path.relative(root, file).replaceAll(path.sep, "/");
+    const html = await readFile(file, "utf8");
+    if (/name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(html)) continue;
+    const route = relative === "index.html" ? "/" : relative.endsWith("/index.html") ? `/${relative.slice(0, -10)}` : `/${relative}`;
+    if (!sitemapUrls.has(`${origin}${route}`)) fail(file, "indexable page missing from sitemap");
+  }
+} catch { fail(sitemapPath, "missing sitemap.xml"); }
+
+if (warnings.length) console.warn(`Warnings (${warnings.length}):\n${warnings.join("\n")}`);
+if (failures.length) {
+  console.error(`Quality gate failed (${failures.length}):\n${failures.join("\n")}`);
+  process.exit(1);
+}
+console.log(`Quality gate passed: ${htmlFiles.length} HTML pages, ${allFiles.length} public files.`);
