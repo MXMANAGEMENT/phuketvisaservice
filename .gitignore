@@ -1,7 +1,7 @@
 ```
-# Compiled and build artifacts
-*.pyc
-__pycache__/
+# Build artifacts
+dist/
+build/
 *.o
 *.obj
 dist/
@@ -30,11 +30,12 @@ node_modules/
 # Coverage reports
 coverage/
 htmlcov/
-.coverage
+*.coverage
 
-# OS generated files
-.DS_Store
-Thumbs.db
+# Environment
+.env
+.env.local
+*.env.*
 
 # MyPy cache
 .mypy_cache/
