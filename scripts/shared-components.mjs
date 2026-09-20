@@ -118,12 +118,38 @@ function renderEntityGraph(relativePath) {
   return `<script type="application/ld+json" data-shared-component="entity-graph">${JSON.stringify({ "@context": "https://schema.org", "@graph": [business, website] })}</script>`;
 }
 
+const conversionRoutes = /^(?:de\/|ru\/)?(?:visa-extension-phuket|retirement-visa-phuket|non-immigrant-visa-phuket|dtv-visa-phuket|90-day-report-phuket|re-entry-permit-phuket|thai-driving-license-phuket|tm30-phuket)\/index\.html$/;
+
+function renderCaseCheck(html, relativePath) {
+  if (!conversionRoutes.test(relativePath)) return "";
+  const locale = pageLocale(relativePath);
+  const copy = locales[locale].caseCheck;
+  const service = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1].replace(/<[^>]+>/g, "").trim() || site.brand;
+  const message = copy.message.replace("{service}", service);
+  const items = copy.items.map(item => `<li>${escapeHtml(item)}</li>`).join("");
+  return `<aside class="case-check" data-shared-component="case-check" aria-labelledby="case-check-title">
+<div class="case-check-copy"><span class="case-check-eyebrow">${escapeHtml(copy.eyebrow)}</span><h2 id="case-check-title">${escapeHtml(copy.title)}</h2><p>${escapeHtml(copy.text)}</p><ul>${items}</ul></div>
+<div class="case-check-action"><a class="btn btn-whatsapp" data-event="whatsapp_click" data-location="case_check" data-service="${escapeHtml(service)}" data-wa-message="${escapeHtml(message)}" data-whatsapp href="#">${whatsappIcon} ${escapeHtml(copy.button)}</a><small>${escapeHtml(copy.note)}</small></div>
+</aside>`;
+}
+
+function injectCaseCheck(html, relativePath) {
+  if (!conversionRoutes.test(relativePath) || /data-shared-component=["']case-check["']/.test(html)) return html;
+  const component = renderCaseCheck(html, relativePath);
+  const voiceAnswer = /(<p\b[^>]*class=["'][^"']*\bvoice-answer\b[^"']*["'][^>]*>[\s\S]*?<\/p>)/i;
+  const lede = /(<p\b[^>]*class=["'][^"']*\blede\b[^"']*["'][^>]*>[\s\S]*?<\/p>)/i;
+  if (voiceAnswer.test(html)) return html.replace(voiceAnswer, `$1\n${component}`);
+  if (lede.test(html)) return html.replace(lede, `$1\n${component}`);
+  return html;
+}
+
 export function applySharedComponents(html, relativePath) {
   let output = stripDuplicatedGlobalSchemas(html);
   const headerPattern = /<header\b[^>]*class=["'][^"']*\bsite-header\b[^"']*["'][^>]*>[\s\S]*?<\/header>/i;
   const footerPattern = /<footer\b[^>]*class=["'][^"']*\bsite-footer\b[^"']*["'][^>]*>[\s\S]*?<\/footer>/i;
   if (headerPattern.test(output)) output = output.replace(headerPattern, renderHeader(output, relativePath));
   if (footerPattern.test(output)) output = output.replace(footerPattern, renderFooter(relativePath));
+  output = injectCaseCheck(output, relativePath);
   const publicSiteConfig = JSON.stringify({ whatsappNumber: site.whatsappNumber, phoneE164: site.phoneE164, email: site.email });
   output = output.replace(/window\.VS_TRACK\s*=\s*\{[^}]*\}/g, `window.VS_SITE=${publicSiteConfig};window.VS_TRACK={GA4_ID:'${site.ga4MeasurementId}',ADS_CONVERSION:'${site.adsConversionId}',META_PIXEL_ID:'${site.metaPixelId}',CAPI_ENDPOINT:'${site.trackingEndpoint}'}`);
   output = output.replace(/<link\b[^>]*rel=["']preconnect["'][^>]*href=["']https:\/\/(?:wa\.me|www\.google-analytics\.com|www\.googletagmanager\.com|connect\.facebook\.net)[^"']*["'][^>]*>\s*/gi, "");
