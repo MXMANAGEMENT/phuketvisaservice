@@ -213,6 +213,99 @@ function injectLocationPage(html, relativePath) {
   return html.replace(/<main\b[^>]*>[\s\S]*?<\/main>/i, renderLocationMain(relativePath));
 }
 
+const homePageCopy = Object.freeze({
+  en: {
+    title: "Clear visa support in Phuket.",
+    intro: "Understand your options, prepare the right documents and know what happens next.",
+    primary: "Check my situation", secondary: "Explore services",
+    note: "Independent local support. No approval guarantees.",
+    servicesTitle: "Support for your life in Phuket.",
+    servicesIntro: "Start with the route closest to your situation. If you are unsure, send us the basics and we will point you in the right direction.",
+    learn: "View service", all: "See all services",
+    processTitle: "From first question to a clear next step.",
+    steps: [["01", "Tell us your situation", "Share your nationality, current visa or stamp and expiry date."], ["02", "Get clear guidance", "We explain the realistic route and the documents it requires."], ["03", "Move forward prepared", "You know what to bring, where to go and what to expect."]],
+    officeTitle: "Local support, transparent boundaries.",
+    officeText: "Our office is in Wichit, Phuket. We provide independent document and process support; all decisions remain with the responsible Thai authorities.",
+    officeLink: "About our team", faqTitle: "Straight answers to common questions", faqIntro: "Requirements depend on your visa type and personal situation.",
+    faqLinks: [["Visa extension", "/visa-extension-phuket/"], ["Retirement visa", "/retirement-visa-phuket/"], ["TM30", "/tm30-phuket/"], ["Phuket Immigration", "/phuket-immigration-office/"]],
+    contactTitle: "Still unsure which route fits?", contactText: "A short WhatsApp message is enough to start a case-specific check.", contact: "Start on WhatsApp",
+    services: [
+      ["Visa extensions", "Prepare for an extension at Phuket Immigration with the relevant documents.", "/visa-extension-phuket/"],
+      ["Long-stay & retirement", "Understand retirement and other long-stay routes without guesswork.", "/retirement-visa-phuket/"],
+      ["DTV & Non-Immigrant visas", "Clarify categories, eligibility questions and document preparation.", "/dtv-visa-phuket/"],
+      ["Reports, permits & documents", "Support with 90-day reports, re-entry permits, TM30 and appointments.", "/90-day-report-phuket/"]
+    ]
+  },
+  de: {
+    title: "Klare Visa-Unterstützung in Phuket.",
+    intro: "Verstehen Sie Ihre Möglichkeiten, bereiten Sie die richtigen Unterlagen vor und wissen Sie, was als Nächstes passiert.",
+    primary: "Situation prüfen", secondary: "Leistungen ansehen",
+    note: "Unabhängige lokale Unterstützung. Keine Genehmigungsgarantie.",
+    servicesTitle: "Unterstützung für Ihr Leben in Phuket.",
+    servicesIntro: "Starten Sie mit dem Thema, das Ihrer Situation am nächsten kommt. Wenn Sie unsicher sind, senden Sie uns die wichtigsten Angaben.",
+    learn: "Leistung ansehen", all: "Alle Leistungen",
+    processTitle: "Von der ersten Frage zum klaren nächsten Schritt.",
+    steps: [["01", "Situation schildern", "Nationalität, aktuelles Visum oder Stempel und Ablaufdatum senden."], ["02", "Klare Orientierung erhalten", "Wir erklären den realistischen Weg und die benötigten Unterlagen."], ["03", "Vorbereitet weitergehen", "Sie wissen, was Sie mitbringen, wohin Sie gehen und was Sie erwartet."]],
+    officeTitle: "Lokale Hilfe mit klaren Grenzen.",
+    officeText: "Unser Büro befindet sich in Wichit, Phuket. Wir bieten unabhängige Dokumenten- und Prozesshilfe; Entscheidungen treffen ausschließlich die zuständigen thailändischen Behörden.",
+    officeLink: "Über unser Team", faqTitle: "Klare Antworten auf häufige Fragen", faqIntro: "Die Anforderungen hängen von Visum und persönlicher Situation ab.",
+    faqLinks: [["Visumverlängerung", "/de/visa-extension-phuket/"], ["Retirement Visa", "/de/retirement-visa-phuket/"], ["TM30-Meldung", "/de/tm30-phuket/"], ["Phuket Immigration", "/de/phuket-immigration-office/"]],
+    contactTitle: "Noch unsicher, welcher Weg passt?", contactText: "Eine kurze WhatsApp-Nachricht genügt für eine fallbezogene erste Prüfung.", contact: "Über WhatsApp starten",
+    services: [
+      ["Visumverlängerungen", "Bereiten Sie Ihre Verlängerung bei Phuket Immigration mit den relevanten Unterlagen vor.", "/de/visa-extension-phuket/"],
+      ["Langzeitaufenthalt & Retirement", "Verstehen Sie Retirement- und weitere Langzeitoptionen ohne Rätselraten.", "/de/retirement-visa-phuket/"],
+      ["DTV & Non-Immigrant Visa", "Klären Sie Kategorien, Voraussetzungen und Dokumentenvorbereitung.", "/de/dtv-visa-phuket/"],
+      ["Meldungen, Permits & Dokumente", "Hilfe bei 90-Tage-Meldung, Re-Entry, TM30 und Terminen.", "/de/90-day-report-phuket/"]
+    ]
+  },
+  ru: {
+    title: "Понятная визовая поддержка на Пхукете.",
+    intro: "Разберитесь в вариантах, подготовьте нужные документы и заранее узнайте следующие шаги.",
+    primary: "Проверить ситуацию", secondary: "Посмотреть услуги",
+    note: "Независимая местная поддержка. Без гарантий одобрения.",
+    servicesTitle: "Поддержка для жизни на Пхукете.",
+    servicesIntro: "Выберите направление, наиболее близкое к вашей ситуации. Если вы не уверены, отправьте нам основные данные.",
+    learn: "Подробнее", all: "Все услуги",
+    processTitle: "От первого вопроса к понятному следующему шагу.",
+    steps: [["01", "Опишите ситуацию", "Укажите гражданство, текущую визу или штамп и дату окончания."], ["02", "Получите понятное объяснение", "Мы расскажем о реалистичном пути и необходимых документах."], ["03", "Действуйте подготовленно", "Вы будете знать, что взять, куда обратиться и чего ожидать."]],
+    officeTitle: "Локальная помощь с прозрачными границами.",
+    officeText: "Наш офис находится в Вичите, Пхукет. Мы независимо помогаем с документами и процессом; решения принимают только компетентные органы Таиланда.",
+    officeLink: "О нашей команде", faqTitle: "Прямые ответы на частые вопросы", faqIntro: "Требования зависят от типа визы и личной ситуации.",
+    faqLinks: [["Продление визы", "/ru/visa-extension-phuket/"], ["Пенсионная виза", "/ru/retirement-visa-phuket/"], ["Уведомление TM30", "/ru/tm30-phuket/"], ["Иммиграционная служба Пхукета", "/ru/phuket-immigration-office/"]],
+    contactTitle: "Не уверены, какой путь подходит?", contactText: "Короткого сообщения в WhatsApp достаточно для первичной проверки ситуации.", contact: "Начать в WhatsApp",
+    services: [
+      ["Продление визы", "Подготовьтесь к продлению в иммиграционной службе Пхукета с нужными документами.", "/ru/visa-extension-phuket/"],
+      ["Долгосрочное пребывание", "Разберитесь в пенсионных и других долгосрочных вариантах.", "/ru/retirement-visa-phuket/"],
+      ["DTV и Non-Immigrant", "Уточните категории, основные условия и подготовку документов.", "/ru/dtv-visa-phuket/"],
+      ["Отчёты, разрешения, документы", "Помощь с 90-дневным отчётом, Re-Entry, TM30 и визитами.", "/ru/90-day-report-phuket/"]
+    ]
+  }
+});
+
+function renderPremiumHome(relativePath) {
+  if (!/^(?:de\/|ru\/)?index\.html$/.test(relativePath)) return "";
+  const locale = pageLocale(relativePath);
+  const copy = homePageCopy[locale];
+  const prefix = locale === "en" ? "" : `/${locale}`;
+  const serviceRows = copy.services.map(([title, text, href], index) => `<article class="premium-service"><span class="premium-service-number">0${index + 1}</span><div><h3><a href="${href}">${escapeHtml(title)}</a></h3><p>${escapeHtml(text)}</p></div><a class="premium-arrow" data-event="service_click" data-location="premium_services" data-service="${escapeHtml(title)}" href="${href}" aria-label="${escapeHtml(copy.learn)}: ${escapeHtml(title)}">→</a></article>`).join("");
+  const faqLinks = copy.faqLinks.map(([label, href]) => `<a href="${href}">${escapeHtml(label)} <span aria-hidden="true">→</span></a>`).join("");
+  const steps = copy.steps.map(([number, title, text]) => `<li><span>${number}</span><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></li>`).join("");
+  const message = locale === "de" ? "Hallo, ich möchte meine Visa-Situation prüfen. Nationalität: ___, Visum/Stempel: ___, Ablaufdatum: ___." : locale === "ru" ? "Здравствуйте, я хочу проверить визовую ситуацию. Гражданство: ___, виза/штамп: ___, срок: ___." : "Hello, I would like a visa case check. Nationality: ___, visa/stamp: ___, expiry date: ___.";
+  return `<main id="main" class="premium-home">
+<section class="premium-hero" aria-labelledby="hero-heading"><div class="premium-hero-copy"><h1 id="hero-heading">${escapeHtml(copy.title)}</h1><p>${escapeHtml(copy.intro)}</p><div class="premium-actions"><a class="btn btn-whatsapp" data-whatsapp data-wa-message="${escapeHtml(message)}" data-event="whatsapp_click" data-intent-event="case_check" data-location="premium_hero" href="#">${whatsappIcon} ${escapeHtml(copy.primary)}</a><a class="premium-text-link" href="#services">${escapeHtml(copy.secondary)} <span aria-hidden="true">→</span></a></div><p class="premium-trust-note">${escapeHtml(copy.note)}</p></div><figure class="premium-hero-media"><img src="/assets/img/phuket-architectural-hero.webp" alt="${locale === "de" ? "Architektonische Terrasse mit Blick auf die Küste von Phuket" : locale === "ru" ? "Архитектурная терраса с видом на побережье Пхукета" : "Architectural terrace overlooking the Phuket coastline"}" width="1536" height="1024" fetchpriority="high"><figcaption>${locale === "de" ? "Stimmungsbild: Phuket, Thailand" : locale === "ru" ? "Атмосферное изображение: Пхукет, Таиланд" : "Editorial location image: Phuket, Thailand"}</figcaption></figure></section>
+<section class="premium-services" id="services" aria-labelledby="services-heading"><div class="container"><div class="premium-section-intro"><h2 id="services-heading">${escapeHtml(copy.servicesTitle)}</h2><p>${escapeHtml(copy.servicesIntro)}</p></div><div class="premium-service-list">${serviceRows}</div></div></section>
+<section class="premium-process" aria-labelledby="process-heading"><div class="container"><h2 id="process-heading">${escapeHtml(copy.processTitle)}</h2><ol>${steps}</ol></div></section>
+<section class="premium-office" aria-labelledby="office-heading"><div class="container"><div class="premium-office-copy"><h2 id="office-heading">${escapeHtml(copy.officeTitle)}</h2><p>${escapeHtml(copy.officeText)}</p><a class="premium-text-link" href="${prefix}/about/">${escapeHtml(copy.officeLink)} <span aria-hidden="true">→</span></a></div><div class="premium-office-mark" aria-hidden="true"><span>Wichit</span><strong>Phuket</strong><small>7.8906° N · 98.3981° E</small></div></div></section>
+<section class="premium-faq" aria-labelledby="faq-heading"><div class="container"><div class="premium-section-intro"><h2 id="faq-heading">${escapeHtml(copy.faqTitle)}</h2><p>${escapeHtml(copy.faqIntro)}</p></div><div class="premium-faq-links">${faqLinks}</div></div></section>
+<section class="premium-contact" id="contact" aria-labelledby="contact-heading"><div class="container"><div><h2 id="contact-heading">${escapeHtml(copy.contactTitle)}</h2><p>${escapeHtml(copy.contactText)}</p></div><a class="btn btn-whatsapp btn-lg" data-whatsapp data-wa-message="${escapeHtml(message)}" data-event="whatsapp_click" data-intent-event="case_check" data-location="premium_final" href="#">${whatsappIcon} ${escapeHtml(copy.contact)}</a></div></section>
+</main>`;
+}
+
+function injectPremiumHome(html, relativePath) {
+  const main = renderPremiumHome(relativePath);
+  return main ? html.replace(/<main\b[^>]*>[\s\S]*?<\/main>/i, main) : html;
+}
+
 function normalizeTrustClaims(html, relativePath) {
   const locale = pageLocale(relativePath);
   const trust = locale === "de" ? "Fallbezogene Dokumentenprüfung · Keine Genehmigungsgarantie" : locale === "ru" ? "Проверка документов по ситуации · Без гарантии одобрения" : "Case-specific document review · No approval guarantee";
@@ -250,6 +343,7 @@ export function applySharedComponents(html, relativePath) {
   output = injectCaseCheck(output, relativePath);
   output = injectServiceDetails(output, relativePath);
   output = injectLocationPage(output, relativePath);
+  output = injectPremiumHome(output, relativePath);
   output = normalizeTrustClaims(output, relativePath);
   const publicSiteConfig = JSON.stringify({ whatsappNumber: site.whatsappNumber, phoneE164: site.phoneE164, email: site.email });
   output = output.replace(/window\.VS_TRACK\s*=\s*\{[^}]*\}/g, `window.VS_SITE=${publicSiteConfig};window.VS_TRACK={GA4_ID:'${site.ga4MeasurementId}',ADS_CONVERSION:'${site.adsConversionId}',META_PIXEL_ID:'${site.metaPixelId}',CAPI_ENDPOINT:'${site.trackingEndpoint}'}`);
