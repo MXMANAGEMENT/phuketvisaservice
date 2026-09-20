@@ -1,0 +1,5 @@
+Contact: mailto:office@visaservicephuket.com
+Expires: 2027-09-20T23:59:59Z
+Canonical: https://phuketvisaservice.com/.well-known/security.txt
+Preferred-Languages: en, de, ru
+Policy: https://phuketvisaservice.com/privacy.html

@@ -9,6 +9,11 @@ const failures = [];
 const warnings = [];
 const isBuildOutput = path.basename(root) === "dist";
 
+async function requiredFile(relative, message) {
+  const file = path.join(root, relative);
+  try { await access(file); } catch { fail(file, message); }
+}
+
 async function filesBelow(dir) {
   const found = [];
   for (const entry of await readdir(dir, { withFileTypes: true })) {
@@ -56,6 +61,24 @@ async function existsAsWebPath(target) {
 
 const allFiles = await filesBelow(root);
 const htmlFiles = allFiles.filter(file => file.endsWith(".html") && !file.endsWith("assets/index.html"));
+
+await requiredFile("404.html", "missing top-level 404.html; Cloudflare would enable SPA fallback and return soft 404s");
+await requiredFile(path.join(".well-known", "security.txt"), "missing security.txt target used by _redirects");
+
+try {
+  const headers = await readFile(path.join(root, "_headers"), "utf8");
+  if (/\/assets\/\*\s+[\s\S]*?Cache-Control:[^\n]+[\s\S]*?\/assets\/(?:css|js)\/\*/m.test(headers)) {
+    fail(path.join(root, "_headers"), "overlapping asset cache rules can merge duplicate Cache-Control values");
+  }
+} catch { fail(path.join(root, "_headers"), "missing Cloudflare _headers file"); }
+
+try {
+  const redirects = await readFile(path.join(root, "_redirects"), "utf8");
+  for (const match of redirects.matchAll(/^\s*(\/\S+)\s+(\/\S+)\s+(?:30[1278])\s*$/gm)) {
+    const target = localTarget(match[2]);
+    if (target && !await existsAsWebPath(target)) fail(path.join(root, "_redirects"), `redirect target does not exist: ${match[2]}`);
+  }
+} catch { fail(path.join(root, "_redirects"), "missing Cloudflare _redirects file"); }
 
 for (const file of allFiles.filter(file => /\.(?:html|js|json|md|txt|xml)$/i.test(file))) {
   const text = await readFile(file, "utf8");
