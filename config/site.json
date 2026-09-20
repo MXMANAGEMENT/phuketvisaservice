@@ -1,0 +1,17 @@
+{
+  "brand": "Visa Service Phuket",
+  "domain": "https://phuketvisaservice.com",
+  "phone": {
+    "display": "+66 94 829 3074",
+    "e164": "+66948293074",
+    "whatsapp": "66948293074"
+  },
+  "tracking": {
+    "ga4": "G-GEGPEWNRDN",
+    "googleAdsConversion": "",
+    "metaPixelId": "",
+    "capiEndpoint": "/api/track"
+  },
+  "locales": ["en", "de", "ru"],
+  "contentLastReviewed": "2026-09-20"
+}
