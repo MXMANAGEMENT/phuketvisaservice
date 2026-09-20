@@ -37,9 +37,9 @@ export function renderHeader(html, relativePath) {
 <a class="nav-services" data-event="cta_click" data-location="header_nav" href="${copy.home}#services">${copy.servicesLabel}</a>
 <nav aria-label="${copy.languageLabel}" class="lang-switch">${languageLinks(html, locale)}</nav>
 <a class="btn btn-whatsapp btn-sm header-cta" data-event="whatsapp_click" data-location="header" data-whatsapp href="#">${whatsappIcon} WhatsApp</a>
-<button type="button" class="burger-btn" aria-expanded="false" aria-label="${copy.menuLabel}"><span class="burger-line"></span><span class="burger-line"></span><span class="burger-line"></span></button>
+<button type="button" class="burger-btn" aria-expanded="false" aria-controls="mobile-navigation" aria-label="${copy.menuLabel}" data-label-open="${copy.menuLabel}" data-label-close="${copy.closeMenuLabel}"><span class="burger-line"></span><span class="burger-line"></span><span class="burger-line"></span></button>
 </div></div>
-<nav class="mobile-nav" aria-label="Mobile Navigation" hidden><div class="mobile-nav-inner"><ul>${nav}</ul></div></nav>
+<nav id="mobile-navigation" class="mobile-nav" aria-label="${copy.mobileNavigationLabel}" hidden><div class="mobile-nav-inner"><ul>${nav}</ul></div></nav>
 </header>`;
 }
 

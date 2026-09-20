@@ -10,9 +10,9 @@
   Content-Security-Policy: default-src 'self' https://static.cloudflareinsights.com https://ajax.cloudflare.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://connect.facebook.net https://static.cloudflareinsights.com https://ajax.cloudflare.com; script-src-elem 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net https://static.cloudflareinsights.com https://ajax.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https://wa.me https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://stats.g.doubleclick.net https://www.googletagmanager.com https://graph.facebook.com https://*.facebook.com https://cloudflareinsights.com; frame-src 'self' https://www.facebook.com https://td.doubleclick.net; form-action 'self'; object-src 'none'; base-uri 'self'; upgrade-insecure-requests
   X-XSS-Protection: 1; mode=block
 
-# Long-cache fingerprint-safe static assets
+# Static assets are not content-hashed, so they must remain revalidatable.
 /assets/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 
 # HTML kept short so content/contact updates go live quickly
 /*.html

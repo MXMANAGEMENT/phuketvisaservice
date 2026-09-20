@@ -30,7 +30,7 @@ export const site = Object.freeze({
 export const locales = Object.freeze({
   en: Object.freeze({
     home: "/", servicesLabel: "Services", languageLabel: "Language",
-    menuLabel: "Open Menu", about: "About Us", allServices: "All services",
+    menuLabel: "Open menu", closeMenuLabel: "Close menu", mobileNavigationLabel: "Mobile navigation", about: "About Us", allServices: "All services",
     contact: "Contact", more: "More", privacy: "Privacy Policy", terms: "Terms",
     office: "Office in Wichit, Phuket, full address shared on WhatsApp",
     hours: "Hours: Mon–Fri 9:00–18:00 · Sat 9:00–14:00 · Sun: WhatsApp only",
@@ -40,7 +40,7 @@ export const locales = Object.freeze({
   }),
   de: Object.freeze({
     home: "/de/", servicesLabel: "Leistungen", languageLabel: "Sprache",
-    menuLabel: "Menü öffnen", about: "Über uns", allServices: "Alle Leistungen",
+    menuLabel: "Menü öffnen", closeMenuLabel: "Menü schließen", mobileNavigationLabel: "Mobile Navigation", about: "Über uns", allServices: "Alle Leistungen",
     contact: "Kontakt", more: "Mehr", privacy: "Datenschutz", terms: "Nutzungsbedingungen",
     office: "Büro in Wichit, Phuket; vollständige Adresse per WhatsApp",
     hours: "Öffnungszeiten: Mo–Fr 9:00–18:00 · Sa 9:00–14:00 · So: nur WhatsApp",
@@ -50,7 +50,7 @@ export const locales = Object.freeze({
   }),
   ru: Object.freeze({
     home: "/ru/", servicesLabel: "Услуги", languageLabel: "Язык",
-    menuLabel: "Открыть меню", about: "О нас", allServices: "Все услуги",
+    menuLabel: "Открыть меню", closeMenuLabel: "Закрыть меню", mobileNavigationLabel: "Мобильная навигация", about: "О нас", allServices: "Все услуги",
     contact: "Контакты", more: "Дополнительно", privacy: "Конфиденциальность", terms: "Условия",
     office: "Офис в Вичите, Пхукет; полный адрес отправим в WhatsApp",
     hours: "Часы работы: Пн–Пт 9:00–18:00 · Сб 9:00–14:00 · Вс: только WhatsApp",

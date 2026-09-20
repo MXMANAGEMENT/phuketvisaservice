@@ -268,32 +268,58 @@
     var btn = document.querySelector(".burger-btn");
     var nav = document.querySelector(".mobile-nav");
     if (!btn || !nav) return;
+    var closeTimer = null;
+    var openLabel = btn.getAttribute("data-label-open") || btn.getAttribute("aria-label") || "Open menu";
+    var closeLabel = btn.getAttribute("data-label-close") || "Close menu";
 
-    function toggleMenu() {
-      var isExpanded = btn.getAttribute("aria-expanded") === "true";
-      btn.setAttribute("aria-expanded", !isExpanded);
-      if (!isExpanded) {
+    function setMenu(open, returnFocus) {
+      if (closeTimer) {
+        clearTimeout(closeTimer);
+        closeTimer = null;
+      }
+      btn.setAttribute("aria-expanded", String(open));
+      btn.setAttribute("aria-label", open ? closeLabel : openLabel);
+      if (open) {
         nav.classList.add("is-open");
         nav.removeAttribute("hidden");
-        document.body.style.overflow = "hidden"; // Prevent scrolling
+        document.body.style.overflow = "hidden";
       } else {
         nav.classList.remove("is-open");
-        setTimeout(function() { nav.setAttribute("hidden", "true"); }, 350);
+        closeTimer = setTimeout(function () {
+          nav.setAttribute("hidden", "");
+          closeTimer = null;
+        }, 350);
         document.body.style.overflow = "";
+        if (returnFocus) btn.focus();
       }
     }
 
-    btn.addEventListener("click", toggleMenu);
+    btn.addEventListener("click", function () {
+      setMenu(btn.getAttribute("aria-expanded") !== "true", false);
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && btn.getAttribute("aria-expanded") === "true") {
+        event.preventDefault();
+        setMenu(false, true);
+      }
+    });
 
     // Close on link click
     var links = nav.querySelectorAll("a");
     links.forEach(function(link) {
       link.addEventListener("click", function() {
         if (btn.getAttribute("aria-expanded") === "true") {
-          toggleMenu();
+          setMenu(false, false);
         }
       });
     });
+
+    window.addEventListener("resize", function () {
+      if (window.innerWidth >= 960 && btn.getAttribute("aria-expanded") === "true") {
+        setMenu(false, false);
+      }
+    }, { passive: true });
   }
 
   function init() {
