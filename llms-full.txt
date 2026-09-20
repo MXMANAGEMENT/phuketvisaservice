@@ -3,7 +3,7 @@
 > This file provides comprehensive, structured content for AI search engines,
 > language models, and answer engines. For a summary, see /llms.txt.
 > Official website: https://phuketvisaservice.com
-> Last updated: 2026-06-08
+> Last updated: 2026-09-20
 
 ---
 
